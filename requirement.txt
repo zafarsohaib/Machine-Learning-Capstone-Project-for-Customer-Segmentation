@@ -1,0 +1,7 @@
+cmake==3.18.4.post1
+xgboost==1.4.1
+lightgbm==3.2.1
+scikit-learn==0.23.2
+scikit-optimize==0.8.1
+kneed==0.7.0
+numpy==1.19.5
