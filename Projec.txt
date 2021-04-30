@@ -1,0 +1,148 @@
+
+
+
+# Machine Learning Engineer Nanodegree
+## Capstone Project
+Sohaib Zafar  
+April 28, 2020
+
+## I. Definition
+
+
+### Project Overview
+
+This project is a part of Udacity Machine Learning Engineer Nanodegree Capstone Project in collaboration with Bertelsmann Arvato. The main aim of this project is to create a Customer Segmentation Report for Arvato Financial Solutions. 
+
+Arvato provided demographics information (like: age, income, wealth, education, assets, cars, houses, family, etc.) of the general population of Germany and of the existing customers of the mail-order company. The data is protected and not allowed to be used by general public under Arvato's terms and conditions.
+
+This demographic information is to be used to identify customer segments of mail-order company, with the aim to improve their targeted marketing campaigns and predict new customer conversion.
+
+
+
+
+### Problem Statement
+
+
+This challenge is a real-life problem, provided by Arvato Financial Solutions, where the problem statement is:
+
+***How can their client, a mail-order company, gets new clients efficiently using data-driven approach for targeted marketing?***
+
+The approach is to perform Customer Segmentation using ML unsupervised learning techniques to identify the clusters of the population that best describe the core customer base of the company. 
+
+After analyzing the core customer base, ML supervised learning techniques were applied on marketing campaign data to predict people who are likely to become new customers.
+
+### Metrics
+
+As this is a multi-class classification problem, Area Under the Curve Receiver Operating Characteristics (ROC-AUC) is the key metrics to measure model performance. The curve represents a measure of separability and, the higher the score the better the performance of the model. RIOC-AUC provides immunity to class imbalance, which is crucial for this problem. Typically, we see number of positive responders to an ad campaign are far lesser than negative responders. This is also the required evaluation metric for the Kaggle submission.
+
+
+## II. Analysis
+
+
+### Data Exploration
+
+There are four data files associated with this project:
+
+-   `Udacity_AZDIAS_052018.csv`: Demographics data for the general population of Germany; 891 211 persons (rows) x 366 features (columns).
+-   `Udacity_CUSTOMERS_052018.csv`: Demographics data for customers of a mail-order company; 191 652 persons (rows) x 369 features (columns).
+-   `Udacity_MAILOUT_052018_TRAIN.csv`: Demographics data for individuals who were targets of a marketing campaign; 42 982 persons (rows) x 367 (columns).
+-   `Udacity_MAILOUT_052018_TEST.csv`: Demographics data for individuals who were targets of a marketing campaign; 42 833 persons (rows) x 366 (columns).
+-   `DIAS_Attributes_Values_2017.xlsx`: Values- level iInformation about attributes used in data.
+-   `DIAS_Information_Levels_Attributes_2017_Komplett.xlsx`: Top-level information about attributes used in data.
+
+I see a lot of missing values in these datasets and not all the features have explanation in a given Excel spreadsheets which needs to be addressed. Arvato provided two spreadsheets containing a top-level list of attributes and descriptions, and a detailed mapping of data values for each feature. Feature_summary_complete.csv was created using two DIAS description files. This file contains attribute, information level, data type, missing or unknown values.
+
+
+### Algorithms and Techniques
+
+For the Unsupervised Learning approach section I will be using Principal Component Analysis algorithm for dimensionality reduction. At its core, PCA allows the decomposition and transformation of data into the most relevant component though the principal that the more variance a feature has, the greater is the power of understanding of the data. After dimensionality reduction I will implement K-means as a clustering approach. Customer Segmentation is the practice of partitioning a customer base into groups of individuals that have similar characteristics, for this purpose K-means is a simple and fast approach that fits well this problem since it scales quite well to large datasets. The principle of K-means implementation is quite elegant: 
+• Specify number of clusters K (that in this case are obtained through optimization using the elbow method) 
+• Initialize centroids by first shuffling the dataset and select random K points
+• Iterate until the centroids don’t change anymore. It is important to note that in the case of K-means there is no ground truth to evaluate model’s performance there is no single right answer to evaluation since for instance the number of k clusters is a hyperparameter input. Elbow Method is used to optimize the number of clusters that were ideal for this dataset. The concept behind the elbow method is to run the k-means clustering on the dataset on ranges of k while calculating the sum of squared errors for each k tested. Once plotted the line looks like an elbow. The elbow point represents the point of diminishing returns when the k increases. As we have a well stated base for the segmentation, I will be using Supervised learning approach for prediction. For the Supervised portion of this analysis I decided to use a parallel testing approach and will be testing data with below models for best performance. 
+- XGBClassifier - It is implementation of gradient boosted decision trees. Models are added sequentially and new models are created to calculate prior errors and add the differences to get the final prediction. 
+- LogisticRegression – Uses historical campaign data to create patterns based on customer responses. 
+- RandomForestClassifier - Random forest performs vectorization, building a classifier fitted to the random target vectors and counting observations in the same node. It then measures the distance between observations. 
+- MLPClassifier – A model based on back propagation neural networks. The weights of different neurons are updated in a way that the difference between the desired and predicted output is as small as possible
+- GradientBoostingClassifier - A Gradient boosting model, similar to XGB but slower, can’t be parallelized and does not perform tree regularization like XGB to avoid data overfitting. 
+- LGBMClassifier - Light GBM is a gradient boosting framework that uses tree-based leaf-wise learning algorithm rather than level wise algorithm.
+
+### Benchmark
+
+To determine how changes in data processing and model hyperparameter tuning were affecting my models I decided to first create base scores of the different models on cleaned but unscaled data. Out of all the models used in this solution LR is the simplest and more straightforward model to use as a benchmark.
+
+I created a reference table to the non-optimized models to be compared against the LR results.
+
+
+## III. Methodology
+
+### Data Preprocessing
+
+While loading the data I encountered warning of mixed data type and an unnamed column.
+
+The features showing mixed type error was determined The columns were a mixture of strings, floats and a missing values marker [‘X’] or [‘XX’], A function was created to convert the strings to floats and the ‘X’ marker to np.nan.
+
+Customers data had 3 columns which were not present in Azdias data hence I dropped them to maintain the homogeneity of features between these two datasets which will be used for segmentation. This brings both datasets to 366 features
+
+Dealing with missing values A function is created that identifies missing and unknown data based on the information provided in the DIAs file and replaces these tags with NaNs. The results after running the missing function is 
+I determined the threshold for missing data columns to be dropped be 30%. Any columns which are missing over 30% of data be dropped
+
+### Feature Engineering
+Below are some Feature Encoding and Engineering performed. 
+- ‘ANREDE_KZ’ refers to lifestyle characteristics and used One Hot Encoding to encode it. 
+- ‘EINGEFUEGT_AM’ is a time related feature, so converted it into a datetime object and extracted the year. 
+-  'CAMEO_DEU_2015' is a categorical feature that ranged from 1 to 9 and A to F I used a LabelEncoder() to encode the categories to ints. 
+-  ‘OST_WEST_KZ’ is a binary feature that had the values array ['W', 'O'], which I mapped to: {'W':0, 'O':1} 
+- I created 2 different features from 'PRAEGENDE_JUGENDJAHRE', a ‘DECADE’ feature and a type of ‘MOVEMENT’ feature (avant-garde or not) 
+- ‘WOHNLAGE’ refers to neighborhood area, from very good to poor; rural so I created 2 different features from this one ‘QUALITY’ related to the quality of the borough and ‘AREA’ to identify if it is rural or not 
+- 'LP_LEBENSPHASE_FEIN' was used to create two new features, one related to life stage, 'LP_LEBENSPHASE_FEIN_life_stage' and one related to the wealth scale 'LP_LEBENSPHASE_FEIN_fine_scale'
+SimpleImputer() was used to impute the nans with the most-frequent values.
+
+### Dimensionality Reduction using PCA
+As number of features or dimensions increases, the model becomes more complex, and chances of overfitting increases. Typically, a model trained on large number of features produces prediction which is much more dependent on the data it was trained on leading to over fitting. Hence poor performance on general data. It is important to reduce dimensionality to significantly increase efficiency in computing and memory consumption of a model, to increase performance and reduce feature noise. The main linear technique for dimensionality reduction, principal component analysis or PCA, performs a linear mapping of the data to a lower-dimensional space in such a way that the variance of the data in the low-dimensional representation is maximized. For scaling the data was tested with Min Max Scaler, Standard Scaler and Robust Scaler and the performances of the standard scaler and min max scaler were identical. PCA or Principal Component Analysis was performed for dimensionality reduction using feature extraction. Scree plot is used to decide on how many components, that accounted for over 80% of the variance observed
+### Customer Segmentation - Unsupervised Learning Approach 
+I have chosen to keep 150 components as per PCA after scaling the data using standard scalar. To create clusters of similar data, K-means is used. We have to define number of centroids, that is k for Kmeans. I will be using Elbow method to find the best value for k. The Elbow method compares the sum of squares until there is no more significant improvement. This k value can be seen in graph where the graph decent becomes gradual.
+![](images/architecture.png)
+The above graph hints at the optimal value for k being 9.
+
+With K means fitted to 9 clusters, I can see some of the clusters which are more in proportion to customer compared to general population. Using 9 clusters for my analysis I find that cluster 1 and cluster 8 seem to have the features that coin what a core customer is and cluster 3, 4 and 6 round up what excludes who the core customers are.
+
+### Prediction - Supervised Learning Approach 
+
+When positive vs negative responses is observed, it shows the imbalance in data.
+
+Few of the classifier I wanted to try for this project: 
+- XGBClassifier - It is implementation of gradient boosted decision trees. Models are added sequentially and new models are created to calculate prior errors and add them up for final prediction. 
+- LogisticRegression – Uses historical campaign data to create patterns based on customer responses. 
+-  LGBMClassifier - Light GBM is a gradient boosting framework that uses tree-based leaf-wise learning algorithm. 
+- RandomForestClassifier - Random forest performs vectorization, building a classifier fitted to the random target vectors and counting observations in the same node. It then measures the distance between observations. 
+- MLPClassifier – A back propagation neural network based model. 
+- GradientBoostingClassifier - A Gradient boosting model.
+
+Lets see below how they perform against each other.
+
+We can see that 3 models Gradient Boost, LGBM and XGB seems to be performing well for unscaled data.
+[]
+Let us see the score with scaling the data using Minmax Scaler.
+
+Since both standard scaler and min max scaler perform equally well, I will stick with minmax scaler. I have selected LGBM and XGB for testing. For tuning I select Bayesian optimization approach as it is known to be one of the best performing approach. The process of hyperparameter tuning for LGBM and XGB is below.
+
+Hyperparameter tuning lgbm Using BayesSearch CV with 500 iterations, below is the hyperparameters selected as per results
+
+Hyperparameter tuning xgboost Using BayesSearch CV with 200 iterations, below is the hyperparameters selected as per results
+
+I will be generating predictions using both xgboost model and LGBM model and submitting at Kaggle competition. Based on the Kaggle score I will be deciding my best model for prediction.
+
+### Results
+My model XGBoost has landed me on the top position among 164 global participants on Kaggle Leader Board with 81% of my model prediction being right. Hence I am choosing XGBoost as my model of choice for this project. Below is the link for the competition leaderboard. https://www.kaggle.com/c/udacity-arvato-identify-customers/leaderboard
+
+
+The ROC-AUC score originally obtained with LR was around 0.66 but with the optimized xgboost it went up to 0.81 I see a scope for improvement where time taken to do further testing and optimization is a hindrance now but I will be working on improving my scores which will be an ongoing part of my journey.
+
+## IV. Improvement
+
+The model prediction can possibily be improved by
+
+-   Doing better feature engineering and feature selection by gathering more domain knowledge in understanding the features better.
+-   Using bigger training set by also including the data used for customer segmentation.
+-   Increasing the number of iterations in the hyper-parameter tuning step.
+-   Increasing the number of PCA principle-components and maximum number of iterations for K-Means clustering, to generate better clusters and customer-cluster mapping, and later using this as a feature for supervised learning model.
