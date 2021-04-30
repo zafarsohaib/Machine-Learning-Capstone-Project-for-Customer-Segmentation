@@ -2,7 +2,7 @@
 
 
 # Machine Learning Engineer Nanodegree
-## Capstone Project
+## Capstone Project Proposal
 Sohaib Zafar  
 April 28, 2020
 
