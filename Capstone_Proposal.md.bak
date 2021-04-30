@@ -78,6 +78,7 @@ For prediction, I'll use the Supervised learning method after evaluating the cus
 
 ### Benchmark
 
-Before doing any hyper-parameter optimization, I will creat different basline models and perform cross-validation and take mean score as a benchmark, before final model selection and paramter tuning.
+Before doing any hyper-parameter optimization, I created different basline models and performed cross-validation and take mean score as a benchmark, before final model selection and paramter tuning.
 
+![](Images/Baseline_Scalar_MinMax_Models.JPG)
 
